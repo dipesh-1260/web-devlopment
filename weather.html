@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+      background: #f0f0f0;
+    }
+
+    #weather-container {
+      background: white;
+      padding: 20px;
+      max-width: 400px;
+      margin: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px;
+    }
+
+    h2 {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Weather App</h1>
+  <div id="weather-container">
+    <input type="text" id="locationInput" placeholder="Enter city name">
+    <button onclick="getWeatherByCity()">Search</button>
+    <button onclick="getWeatherByLocation()">Use My Location</button>
+
+    <div id="weatherResult"></div>
+  </div>
+
+  <script>
+    const apiKey = 'YOUR_API_KEY'; // Replace with your OpenWeatherMap API key
+
+    async function getWeather(city) {
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('City not found');
+        const data = await response.json();
+        displayWeather(data);
+      } catch (error) {
+        document.getElementById('weatherResult').innerHTML = `<p style="color:red;">${error.message}</p>`;
+      }
+    }
+
+    function getWeatherByCity() {
+      const city = document.getElementById('locationInput').value.trim();
+      if (city) {
+        getWeather(city);
+      }
+    }
+
+    function getWeatherByLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async position => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Location weather not found');
+            const data = await response.json();
+            displayWeather(data);
+          } catch (error) {
+            document.getElementById('weatherResult').innerHTML = `<p style="color:red;">${error.message}</p>`;
+          }
+        }, () => {
+          alert('Unable to retrieve your location.');
+        });
+      } else {
+        alert('Geolocation is not supported by your browser.');
+      }
+    }
+
+    function displayWeather(data) {
+      const weatherHtml = `
+        <h2>${data.name}, ${data.sys.country}</h2>
+        <p><strong>${data.weather[0].main}</strong> - ${data.weather[0].description}</p>
+        <p>🌡️ Temperature: ${data.main.temp} °C</p>
+        <p>💧 Humidity: ${data.main.humidity}%</p>
+        <p>🌬️ Wind Speed: ${data.wind.speed} m/s</p>
+      `;
+      document.getElementById('weatherResult').innerHTML = weatherHtml;
+    }
+  </script>
+</body>
+</html>
